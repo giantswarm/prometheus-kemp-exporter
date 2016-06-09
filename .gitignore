@@ -1,2 +1,5 @@
 prometheus-kemp-exporter
+.gobuild/
+bin-dist/
+build/
 

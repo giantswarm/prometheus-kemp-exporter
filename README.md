@@ -1,5 +1,7 @@
 # prometheus-kemp-exporter
 
+[![Build Status](https://api.travis-ci.org/giantswarm/prometheus-kemp-exporter.svg)](https://travis-ci.org/giantswarm/prometheus-kemp-exporter)
+
 `prometheus-kemp-exporter` exports Kemp statistics to Prometheus.
 
 ## Getting `prometheus-kemp-exporter`
