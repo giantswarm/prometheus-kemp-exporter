@@ -21,7 +21,9 @@ before_install:
     - chmod +x ./builder
     - export PATH=$PATH:$PWD
 
-script: make ci-build
+script:
+    - make ci-build
+    - ./prometheus-kemp-exporter
 
 before_cache:
     - cp ./builder ./builder-cache/builder-$BUILDER_VERSION
