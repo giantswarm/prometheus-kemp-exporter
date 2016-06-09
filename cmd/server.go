@@ -6,7 +6,9 @@ import (
 	"log"
 	"net/http"
 	"os"
+	"os/signal"
 	"strconv"
+	"syscall"
 	"time"
 
 	kemp "github.com/giantswarm/kemp-client"
@@ -173,6 +175,23 @@ func serverRun(cmd *cobra.Command, args []string) {
 			}
 
 			time.Sleep(time.Second * time.Duration(waitSeconds))
+		}
+	}()
+
+	go func() {
+		intChan := make(chan os.Signal)
+		termChan := make(chan os.Signal)
+
+		signal.Notify(intChan, syscall.SIGINT)
+		signal.Notify(termChan, syscall.SIGTERM)
+
+		select {
+		case <-intChan:
+			log.Print("Received SIGINT, exiting")
+			os.Exit(0)
+		case <-termChan:
+			log.Print("Received SIGTERM, exiting")
+			os.Exit(0)
 		}
 	}()
 
