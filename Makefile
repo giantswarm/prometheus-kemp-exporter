@@ -15,12 +15,12 @@ COMMIT := $(shell git rev-parse --short HEAD)
 
 SOURCE=$(shell find . -name '*.go')
 
-BUILD_COMMAND=go build -o $(BIN)
+BUILD_COMMAND=go build -a -tags netgo -ldflags '-w' -o $(BIN)
 
 all: $(BIN)
 
 clean:
-	rm -rf $(BUILD_PATH) $(BIN)m
+	rm -rf $(BUILD_PATH) $(BIN) bin-dist/ build/
 
 .gobuild:
 	@mkdir -p $(GS_PATH)
@@ -42,6 +42,8 @@ deps:
 	@${MAKE} -B -s .gobuild
 
 $(BIN): $(SOURCE) VERSION .gobuild
+	CGO_ENABLED=0
+	
 	@echo Building inside Docker container for $(GOOS)/$(GOARCH)
 	docker run \
 	    --rm \
@@ -54,8 +56,13 @@ $(BIN): $(SOURCE) VERSION .gobuild
 	    $(BUILD_COMMAND)
 
 ci-build: $(SOURCE) VERSION .gobuild
-	echo Building for $(GOOS)/$(GOARCH)
+	CGO_ENABLED=0
+	
+	@echo Building for $(GOOS)/$(GOARCH)
 	$(BUILD_COMMAND)
+	
+docker-image: $(BIN)
+	docker build -t giantswarm/$(PROJECT):$(VERSION) .
 
 bin-dist: $(SOURCE) VERSION .gobuild
 	# Remove any old bin-dist or build directories
