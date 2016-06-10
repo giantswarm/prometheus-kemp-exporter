@@ -15,7 +15,22 @@ COMMIT := $(shell git rev-parse --short HEAD)
 
 SOURCE=$(shell find . -name '*.go')
 
-BUILD_COMMAND=go build -a -tags netgo -ldflags '-w' -o $(BIN)
+ifndef GOOS
+  GOOS := $(shell go env GOOS)
+endif
+ifndef GOARCH
+  GOARCH := $(shell go env GOARCH)
+endif
+
+BUILD_COMMAND=go build -a \
+	-tags netgo \
+	-ldflags \
+	"-X github.com/giantswarm/prometheus-kemp-exporter/cmd.version=$(VERSION) \
+	-X github.com/giantswarm/prometheus-kemp-exporter/cmd.goVersion=$(GOVERSION) \
+	-X github.com/giantswarm/prometheus-kemp-exporter/cmd.gitCommit=$(COMMIT) \
+	-X github.com/giantswarm/prometheus-kemp-exporter/cmd.osArch=$(GOOS)/$(GOARCH) \
+	-w" \
+	-o $(BIN)
 
 all: $(BIN)
 
@@ -25,6 +40,9 @@ clean:
 .gobuild:
 	@mkdir -p $(GS_PATH)
 	@rm -f $(GS_PATH)/$(PROJECT) && cd "$(GS_PATH)" && ln -s ../../../.. $(PROJECT)
+
+	@builder get dep -b 1238ba19d24b0b9ceee2094e1cb31947d45c3e86 https://github.com/spf13/cobra.git $(GOPATH)/src/github.com/spf13/cobra
+	@builder get dep -b cb88ea77998c3f024757528e3305022ab50b43be https://github.com/spf13/pflag.git $(GOPATH)/src/github.com/spf13/pflag
 
 	@builder get dep -b 41a420441bc6fb54bb2df007a380f3332e081e91 https://github.com/giantswarm/kemp-client.git $(GOPATH)/src/github.com/giantswarm/kemp-client
 	@builder get dep -b 08cceb5d0b5331634b9826762a8fd53b29b86ad8 https://github.com/juju/errgo.git $(GOPATH)/src/github.com/juju/errgo
