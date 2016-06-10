@@ -8,9 +8,53 @@
 
 `prometheus-kemp-exporter` exports Kemp statistics to Prometheus.
 
+## Prerequisites
+
 ## Getting `prometheus-kemp-exporter`
 
+Download the latest release: https://github.com/giantswarm/prometheus-kemp-exporter/releases/latest
+
 Clone the git repository: https://github.com/giantswarm/prometheus-kemp-exporter.git
+
+Download the latest docker image from here: https://hub.docker.com/r/giantswarm/prometheus-kemp-exporter/
+
+
+### How to build
+
+#### Dependencies
+
+- [github.com/giantswarm/kemp-client](https://github.com/giantswarm/kemp-client)
+- [github.com/prometheus/client_golang](https://github.com/prometheus/client_golang)
+- [github.com/spf13/cobra](https://github.com/spf13/cobra)
+
+#### Building the binary
+
+```
+make
+```
+
+#### Building the docker image
+
+```
+make docker-image
+```
+
+
+## Running `prometheus-kemp-exporter`
+
+Running the binary directly:
+```
+$ prometheus-kemp-exporter server <ENDPOINT> <USERNAME> <PASSWORD>
+2016/06/10 10:23:15 Listening on port 8000
+```
+
+Running in a Docker container:
+```
+$ docker run -p 8000:8000 giantswarm/prometheus-kemp-exporter:latest server <ENDPOINT> <USERNAME> <PASSWORD>
+2016/06/10 09:24:03 Listening on port 8000
+```
+
+Help information can be found with the `--help` flag.
 
 ## Contact
 
