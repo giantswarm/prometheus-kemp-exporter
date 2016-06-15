@@ -44,7 +44,7 @@ clean:
 	@builder get dep -b 1238ba19d24b0b9ceee2094e1cb31947d45c3e86 https://github.com/spf13/cobra.git $(GOPATH)/src/github.com/spf13/cobra
 	@builder get dep -b cb88ea77998c3f024757528e3305022ab50b43be https://github.com/spf13/pflag.git $(GOPATH)/src/github.com/spf13/pflag
 
-	@builder get dep -b virtual-server-rename https://github.com/giantswarm/kemp-client.git $(GOPATH)/src/github.com/giantswarm/kemp-client
+	@builder get dep -b 873f1a0cbf91712e5c48840e51d9a741ef17214c https://github.com/giantswarm/kemp-client.git $(GOPATH)/src/github.com/giantswarm/kemp-client
 	@builder get dep -b 08cceb5d0b5331634b9826762a8fd53b29b86ad8 https://github.com/juju/errgo.git $(GOPATH)/src/github.com/juju/errgo
 	@builder get dep -b e9ff06f347d3f5d0013d59ed83754f0e88de10d4 https://github.com/rogpeppe/go-charset.git $(GOPATH)/src/github.com/rogpeppe/go-charset
 	
