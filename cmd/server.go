@@ -40,34 +40,34 @@ var (
 		Help: "The number of packets per second.",
 	})
 
-	virtualServerTotalConnections = prometheus.NewGaugeVec(prometheus.GaugeOpts{
-		Name: "kemp_virtual_server_total_connections",
-		Help: "The number of total connections per virtual server.",
-	}, []string{"address", "port"})
-	virtualServerTotalPackets = prometheus.NewGaugeVec(prometheus.GaugeOpts{
-		Name: "kemp_virtual_server_total_packets",
-		Help: "The number of total packets per virtual server.",
-	}, []string{"address", "port"})
-	virtualServerTotalBytes = prometheus.NewGaugeVec(prometheus.GaugeOpts{
-		Name: "kemp_virtual_server_total_bytes",
-		Help: "The number of total bytes per virtual server.",
-	}, []string{"address", "port"})
-	virtualServerActiveConnections = prometheus.NewGaugeVec(prometheus.GaugeOpts{
-		Name: "kemp_virtual_server_active_connections",
-		Help: "The number of active connections per virtual server.",
-	}, []string{"address", "port"})
-	virtualServerConnsPerSec = prometheus.NewGaugeVec(prometheus.GaugeOpts{
-		Name: "kemp_virtual_server_connections_per_second",
-		Help: "The number of connections per second per virtual server.",
-	}, []string{"address", "port"})
-	virtualServerBytesRead = prometheus.NewGaugeVec(prometheus.GaugeOpts{
-		Name: "kemp_virtual_server_bytes_read",
-		Help: "The number of bytes read per virtual server.",
-	}, []string{"address", "port"})
-	virtualServerBytesWritten = prometheus.NewGaugeVec(prometheus.GaugeOpts{
-		Name: "kemp_virtual_server_bytes_written",
-		Help: "The number of bytes written per virtual server",
-	}, []string{"address", "port"})
+	virtualServiceTotalConnections = prometheus.NewGaugeVec(prometheus.GaugeOpts{
+		Name: "kemp_virtual_service_total_connections",
+		Help: "The number of total connections per virtual service.",
+	}, []string{"name", "address", "port"})
+	virtualServiceTotalPackets = prometheus.NewGaugeVec(prometheus.GaugeOpts{
+		Name: "kemp_virtual_service_total_packets",
+		Help: "The number of total packets per virtual service.",
+	}, []string{"name", "address", "port"})
+	virtualServiceTotalBytes = prometheus.NewGaugeVec(prometheus.GaugeOpts{
+		Name: "kemp_virtual_service_total_bytes",
+		Help: "The number of total bytes per virtual service.",
+	}, []string{"name", "address", "port"})
+	virtualServiceActiveConnections = prometheus.NewGaugeVec(prometheus.GaugeOpts{
+		Name: "kemp_virtual_service_active_connections",
+		Help: "The number of active connections per virtual service.",
+	}, []string{"name", "address", "port"})
+	virtualServiceConnsPerSec = prometheus.NewGaugeVec(prometheus.GaugeOpts{
+		Name: "kemp_virtual_service_connections_per_second",
+		Help: "The number of connections per second per virtual service.",
+	}, []string{"name", "address", "port"})
+	virtualServiceBytesRead = prometheus.NewGaugeVec(prometheus.GaugeOpts{
+		Name: "kemp_virtual_service_bytes_read",
+		Help: "The number of bytes read per virtual service.",
+	}, []string{"name", "address", "port"})
+	virtualServiceBytesWritten = prometheus.NewGaugeVec(prometheus.GaugeOpts{
+		Name: "kemp_virtual_service_bytes_written",
+		Help: "The number of bytes written per virtual service",
+	}, []string{"name", "address", "port"})
 
 	realServerTotalConnections = prometheus.NewGaugeVec(prometheus.GaugeOpts{
 		Name: "kemp_real_server_total_connections",
@@ -110,13 +110,13 @@ func init() {
 	prometheus.MustRegister(bytesPerSec)
 	prometheus.MustRegister(packetsPerSec)
 
-	prometheus.MustRegister(virtualServerTotalConnections)
-	prometheus.MustRegister(virtualServerTotalPackets)
-	prometheus.MustRegister(virtualServerTotalBytes)
-	prometheus.MustRegister(virtualServerActiveConnections)
-	prometheus.MustRegister(virtualServerConnsPerSec)
-	prometheus.MustRegister(virtualServerBytesRead)
-	prometheus.MustRegister(virtualServerBytesWritten)
+	prometheus.MustRegister(virtualServiceTotalConnections)
+	prometheus.MustRegister(virtualServiceTotalPackets)
+	prometheus.MustRegister(virtualServiceTotalBytes)
+	prometheus.MustRegister(virtualServiceActiveConnections)
+	prometheus.MustRegister(virtualServiceConnsPerSec)
+	prometheus.MustRegister(virtualServiceBytesRead)
+	prometheus.MustRegister(virtualServiceBytesWritten)
 
 	prometheus.MustRegister(realServerTotalConnections)
 	prometheus.MustRegister(realServerTotalPackets)
@@ -150,28 +150,46 @@ func serverRun(cmd *cobra.Command, args []string) {
 				os.Exit(1)
 			}
 
+			// The Kemp API stats endpoint doesn't return virtual service names.
+			// So, let's construct a lookup table between addresses and names,
+			// so we can use as the names as a label.
+			addressNameLookup := map[string]string{}
+			virtualServices, err := client.ListVirtualServices()
+			if err != nil {
+				log.Println("Error getting virtual services ", err)
+				os.Exit(1)
+			}
+			for _, vs := range virtualServices {
+				addressNameLookup[vs.IPAddress] = vs.Name
+			}
+
 			connsPerSec.Set(float64(statistics.Totals.ConnectionsPerSec))
 			bytesPerSec.Set(float64(statistics.Totals.BytesPerSec))
 			packetsPerSec.Set(float64(statistics.Totals.PacketsPerSec))
 
-			for _, vs := range statistics.VirtualServers {
-				virtualServerTotalConnections.WithLabelValues(vs.Address, strconv.Itoa(vs.Port)).Set(float64(vs.TotalConnections))
-				virtualServerTotalPackets.WithLabelValues(vs.Address, strconv.Itoa(vs.Port)).Set(float64(vs.TotalPackets))
-				virtualServerTotalBytes.WithLabelValues(vs.Address, strconv.Itoa(vs.Port)).Set(float64(vs.TotalBytes))
-				virtualServerActiveConnections.WithLabelValues(vs.Address, strconv.Itoa(vs.Port)).Set(float64(vs.ActiveConnections))
-				virtualServerConnsPerSec.WithLabelValues(vs.Address, strconv.Itoa(vs.Port)).Set(float64(vs.ConnectionsPerSec))
-				virtualServerBytesRead.WithLabelValues(vs.Address, strconv.Itoa(vs.Port)).Set(float64(vs.BytesRead))
-				virtualServerBytesWritten.WithLabelValues(vs.Address, strconv.Itoa(vs.Port)).Set(float64(vs.BytesWritten))
+			for _, vs := range statistics.VirtualServices {
+				name, _ := addressNameLookup[vs.Address]
+				port := strconv.Itoa(vs.Port)
+
+				virtualServiceTotalConnections.WithLabelValues(name, vs.Address, port).Set(float64(vs.TotalConnections))
+				virtualServiceTotalPackets.WithLabelValues(name, vs.Address, port).Set(float64(vs.TotalPackets))
+				virtualServiceTotalBytes.WithLabelValues(name, vs.Address, port).Set(float64(vs.TotalBytes))
+				virtualServiceActiveConnections.WithLabelValues(name, vs.Address, port).Set(float64(vs.ActiveConnections))
+				virtualServiceConnsPerSec.WithLabelValues(name, vs.Address, port).Set(float64(vs.ConnectionsPerSec))
+				virtualServiceBytesRead.WithLabelValues(name, vs.Address, port).Set(float64(vs.BytesRead))
+				virtualServiceBytesWritten.WithLabelValues(name, vs.Address, port).Set(float64(vs.BytesWritten))
 			}
 
 			for _, rs := range statistics.RealServers {
-				realServerTotalConnections.WithLabelValues(rs.Address, strconv.Itoa(rs.Port)).Set(float64(rs.TotalConnections))
-				realServerTotalPackets.WithLabelValues(rs.Address, strconv.Itoa(rs.Port)).Set(float64(rs.TotalPackets))
-				realServerTotalBytes.WithLabelValues(rs.Address, strconv.Itoa(rs.Port)).Set(float64(rs.TotalBytes))
-				realServerActiveConnections.WithLabelValues(rs.Address, strconv.Itoa(rs.Port)).Set(float64(rs.ActiveConnections))
-				realServerConnsPerSec.WithLabelValues(rs.Address, strconv.Itoa(rs.Port)).Set(float64(rs.ConnectionsPerSec))
-				realServerBytesRead.WithLabelValues(rs.Address, strconv.Itoa(rs.Port)).Set(float64(rs.BytesRead))
-				realServerBytesWritten.WithLabelValues(rs.Address, strconv.Itoa(rs.Port)).Set(float64(rs.BytesWritten))
+				port := strconv.Itoa(rs.Port)
+
+				realServerTotalConnections.WithLabelValues(rs.Address, port).Set(float64(rs.TotalConnections))
+				realServerTotalPackets.WithLabelValues(rs.Address, port).Set(float64(rs.TotalPackets))
+				realServerTotalBytes.WithLabelValues(rs.Address, port).Set(float64(rs.TotalBytes))
+				realServerActiveConnections.WithLabelValues(rs.Address, port).Set(float64(rs.ActiveConnections))
+				realServerConnsPerSec.WithLabelValues(rs.Address, port).Set(float64(rs.ConnectionsPerSec))
+				realServerBytesRead.WithLabelValues(rs.Address, port).Set(float64(rs.BytesRead))
+				realServerBytesWritten.WithLabelValues(rs.Address, port).Set(float64(rs.BytesWritten))
 			}
 
 			time.Sleep(time.Second * time.Duration(waitSeconds))
