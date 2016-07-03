@@ -1,0 +1,47 @@
+hash: 616a5791be4063c6e2de42006686481f19c9db7bea9e09affcabd8d08589c3e1
+updated: 2016-07-03T15:57:38.058694209+01:00
+imports:
+- name: github.com/beorn7/perks
+  version: 3ac7bf7a47d159a033b107610db8a1b6575507a4
+  subpackages:
+  - quantile
+- name: github.com/giantswarm/kemp-client
+  version: 873f1a0cbf91712e5c48840e51d9a741ef17214c
+- name: github.com/golang/protobuf
+  version: 3852dcfda249c2097355a6aabb199a28d97b30df
+  subpackages:
+  - proto
+- name: github.com/inconshreveable/mousetrap
+  version: 76626ae9c91c4f2a10f34cad8ce83ea42c93bb75
+- name: github.com/juju/errgo
+  version: 08cceb5d0b5331634b9826762a8fd53b29b86ad8
+- name: github.com/matttproud/golang_protobuf_extensions
+  version: c12348ce28de40eed0136aa2b644d0ee0650e56c
+  subpackages:
+  - pbutil
+- name: github.com/prometheus/client_golang
+  version: 488edd04dc224ba64c401747cd0a4b5f05dfb234
+  subpackages:
+  - prometheus
+- name: github.com/prometheus/client_model
+  version: fa8ad6fec33561be4280a8f0514318c79d7f6cb6
+  subpackages:
+  - go
+- name: github.com/prometheus/common
+  version: 4402f4e5ea79ec15f3c574773b6a5198fbea215f
+  subpackages:
+  - expfmt
+  - internal/bitbucket.org/ww/goautoneg
+  - model
+- name: github.com/prometheus/procfs
+  version: abf152e5f3e97f2fafac028d2cc06c1feb87ffa5
+- name: github.com/rogpeppe/go-charset
+  version: e9ff06f347d3f5d0013d59ed83754f0e88de10d4
+  subpackages:
+  - charset
+  - data
+- name: github.com/spf13/cobra
+  version: 1238ba19d24b0b9ceee2094e1cb31947d45c3e86
+- name: github.com/spf13/pflag
+  version: 367864438f1b1a3c7db4da06a2f55b144e6784e0
+devImports: []

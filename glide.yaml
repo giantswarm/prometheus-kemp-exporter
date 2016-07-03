@@ -1,0 +1,10 @@
+package: github.com/giantswarm/prometheus-kemp-exporter
+import:
+- package: github.com/giantswarm/kemp-client
+  version: 873f1a0cbf91712e5c48840e51d9a741ef17214c
+- package: github.com/prometheus/client_golang
+  subpackages:
+  - prometheus
+  version: 488edd04dc224ba64c401747cd0a4b5f05dfb234
+- package: github.com/spf13/cobra
+  version: 1238ba19d24b0b9ceee2094e1cb31947d45c3e86
