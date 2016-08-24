@@ -27,6 +27,11 @@ var (
 	waitSeconds int
 	port        int
 
+	kempUp = prometheus.NewGauge(prometheus.GaugeOpts{
+		Name: "kemp_up",
+		Help: "Whether the last kemp scrape was successful (1: up, 0: down)",
+	})
+
 	connsPerSec = prometheus.NewGauge(prometheus.GaugeOpts{
 		Name: "kemp_totals_connections_per_second",
 		Help: "The number of connections per second.",
@@ -106,6 +111,8 @@ func init() {
 	serverCmd.Flags().IntVar(&waitSeconds, "wait", 10, "time (in seconds) between accessing the Kemp API")
 	serverCmd.Flags().BoolVar(&debug, "debug", false, "enable debug output")
 
+	prometheus.MustRegister(kempUp)
+
 	prometheus.MustRegister(connsPerSec)
 	prometheus.MustRegister(bytesPerSec)
 	prometheus.MustRegister(packetsPerSec)
@@ -125,6 +132,10 @@ func init() {
 	prometheus.MustRegister(realServerConnsPerSec)
 	prometheus.MustRegister(realServerBytesRead)
 	prometheus.MustRegister(realServerBytesWritten)
+}
+
+func sleep() {
+	time.Sleep(time.Second * time.Duration(waitSeconds))
 }
 
 func serverRun(cmd *cobra.Command, args []string) {
@@ -147,7 +158,10 @@ func serverRun(cmd *cobra.Command, args []string) {
 			statistics, err := client.GetStatistics()
 			if err != nil {
 				log.Println("Error getting statistics ", err)
-				os.Exit(1)
+				kempUp.Set(0)
+
+				sleep()
+				continue
 			}
 
 			// The Kemp API stats endpoint doesn't return virtual service names.
@@ -157,8 +171,13 @@ func serverRun(cmd *cobra.Command, args []string) {
 			virtualServices, err := client.ListVirtualServices()
 			if err != nil {
 				log.Println("Error getting virtual services ", err)
-				os.Exit(1)
+				kempUp.Set(0)
+
+				sleep()
+				continue
 			}
+			kempUp.Set(1)
+
 			for _, vs := range virtualServices {
 				addressNameLookup[vs.IPAddress] = vs.Name
 			}
@@ -192,7 +211,7 @@ func serverRun(cmd *cobra.Command, args []string) {
 				realServerBytesWritten.WithLabelValues(rs.Address, port).Set(float64(rs.BytesWritten))
 			}
 
-			time.Sleep(time.Second * time.Duration(waitSeconds))
+			sleep()
 		}
 	}()
 
