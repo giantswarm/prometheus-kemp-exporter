@@ -31,6 +31,52 @@ var (
 		Name: "kemp_up",
 		Help: "Whether the last kemp scrape was successful (1: up, 0: down)",
 	})
+	
+	tpsTotal = prometheus.NewGauge(prometheus.GaugeOpts{
+		Name: "kemp_total_tps",
+		Help: "The total number of Transactions Per Second (TPS).",
+	})
+	tpsTotalSSL = prometheus.NewGauge(prometheus.GaugeOpts{
+		Name: "kemp_total_tps_ssl",
+		Help: "The total number of SSL Transactions Per Second (TPS).",
+	})
+	cpuUser = prometheus.NewGauge(prometheus.GaugeOpts{
+		Name: "kemp_cpu_user",
+		Help: "The percentage of the CPU spent processing in user mode.",
+	})
+	cpuSystem = prometheus.NewGauge(prometheus.GaugeOpts{
+		Name: "kemp_cpu_system",
+		Help: "The percentage of the CPU spent processing in system mode.",
+	})
+	cpuIdle = prometheus.NewGauge(prometheus.GaugeOpts{
+		Name: "kemp_cpu_idle",
+		Help: "The percentage of CPU which is idle.",
+	})
+	cpuIOWaiting = prometheus.NewGauge(prometheus.GaugeOpts{
+		Name: "kemp_cpu_io_waiting",
+		Help: "The percentage of the CPU spent waiting for I/O to complete.",
+	})
+	// Used - This will be 100 - Idle
+	cpuUsage = prometheus.NewGauge(prometheus.GaugeOpts{
+		Name: "kemp_cpu_percentage_used",
+		Help: "The percentage of the CPU that has been utilized.",
+	})
+	memUsed = prometheus.NewGauge(prometheus.GaugeOpts{
+		Name: "kemp_memory_amount_used",
+		Help: "The amount of memory in use.",
+	})
+	percentMemUsed = prometheus.NewGauge(prometheus.GaugeOpts{
+		Name: "kemp_percent_memory_used",
+		Help: "The percentage of memory used.",
+	})
+	memFree = prometheus.NewGauge(prometheus.GaugeOpts{
+		Name: "kemp_memory_amount_free",
+		Help: "The amount of memory free.",
+	})
+	percentMemFree = prometheus.NewGauge(prometheus.GaugeOpts{
+		Name: "kemp_percent_memory_free",
+		Help: "The percentage of free memory.",
+	})	
 
 	connsPerSec = prometheus.NewGauge(prometheus.GaugeOpts{
 		Name: "kemp_totals_connections_per_second",
@@ -113,6 +159,18 @@ func init() {
 
 	prometheus.MustRegister(kempUp)
 
+	prometheus.MustRegister(tpsTotal)
+	prometheus.MustRegister(tpsTotalSSL)
+	prometheus.MustRegister(cpuUser)
+	prometheus.MustRegister(cpuSystem)
+	prometheus.MustRegister(cpuIdle)
+	prometheus.MustRegister(cpuIOWaiting)
+	prometheus.MustRegister(cpuUsage)
+	prometheus.MustRegister(memUsed)
+	prometheus.MustRegister(percentMemUsed)
+	prometheus.MustRegister(memFree)
+	prometheus.MustRegister(percentMemFree)	
+
 	prometheus.MustRegister(connsPerSec)
 	prometheus.MustRegister(bytesPerSec)
 	prometheus.MustRegister(packetsPerSec)
@@ -178,6 +236,18 @@ func serverRun(cmd *cobra.Command, args []string) {
 			}
 			kempUp.Set(1)
 
+			tpsTotal.Set(float64(statistics.TPS.Total))
+			tpsTotalSSL.Set(float64(statistics.TPS.SSL))
+			cpuUser.Set(float64(statistics.CPU.User))
+			cpuSystem.Set(float64(statistics.CPU.System))
+			cpuIdle.Set(float64(statistics.CPU.Idle))
+			cpuIOWaiting.Set(float64(statistics.CPU.IOWaiting))
+			cpuUsage.Set(float64(statistics.CPU.Used))
+			memUsed.Set(float64(statistics.Memory.Memused))
+			percentMemUsed.Set(float64(statistics.Memory.Percentmemused))
+			memFree.Set(float64(statistics.Memory.Memfree))
+			percentMemFree.Set(float64(statistics.Memory.Percentmemfree))
+			
 			for _, vs := range virtualServices {
 				addressNameLookup[vs.IPAddress] = vs.Name
 			}
