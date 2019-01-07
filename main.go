@@ -4,7 +4,7 @@ import (
 	"fmt"
 	"os"
 
-	"github.com/giantswarm/prometheus-kemp-exporter/cmd"
+	"github.com/majandres/prometheus-kemp-exporter/cmd"
 )
 
 func main() {

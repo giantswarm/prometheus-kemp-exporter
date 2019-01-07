@@ -11,7 +11,7 @@ import (
 	"syscall"
 	"time"
 
-	kemp "github.com/giantswarm/kemp-client"
+	kemp "github.com/majandres/kemp-client"
 	"github.com/prometheus/client_golang/prometheus"
 	"github.com/spf13/cobra"
 )
@@ -31,19 +31,85 @@ var (
 		Name: "kemp_up",
 		Help: "Whether the last kemp scrape was successful (1: up, 0: down)",
 	})
+	
+	tpsTotal = prometheus.NewGauge(prometheus.GaugeOpts{
+		Name: "kemp_total_tps",
+		Help: "The total number of Transactions Per Second (TPS).",
+	})
+	tpsTotalSSL = prometheus.NewGauge(prometheus.GaugeOpts{
+		Name: "kemp_total_tps_ssl",
+		Help: "The total number of SSL Transactions Per Second (TPS).",
+	})
+	cpuUser = prometheus.NewGauge(prometheus.GaugeOpts{
+		Name: "kemp_cpu_user",
+		Help: "The percentage of the CPU spent processing in user mode.",
+	})
+	cpuSystem = prometheus.NewGauge(prometheus.GaugeOpts{
+		Name: "kemp_cpu_system",
+		Help: "The percentage of the CPU spent processing in system mode.",
+	})
+	cpuIdle = prometheus.NewGauge(prometheus.GaugeOpts{
+		Name: "kemp_cpu_idle",
+		Help: "The percentage of CPU which is idle.",
+	})
+	cpuIOWaiting = prometheus.NewGauge(prometheus.GaugeOpts{
+		Name: "kemp_cpu_io_waiting",
+		Help: "The percentage of the CPU spent waiting for I/O to complete.",
+	})
+	// Used - This will be 100 - Idle
+	cpuUsage = prometheus.NewGauge(prometheus.GaugeOpts{
+		Name: "kemp_cpu_percentage_used",
+		Help: "The percentage of the CPU that has been utilized.",
+	})
+	memUsed = prometheus.NewGauge(prometheus.GaugeOpts{
+		Name: "kemp_memory_amount_used",
+		Help: "The amount of memory in use.",
+	})
+	percentMemUsed = prometheus.NewGauge(prometheus.GaugeOpts{
+		Name: "kemp_percent_memory_used",
+		Help: "The percentage of memory used.",
+	})
+	memFree = prometheus.NewGauge(prometheus.GaugeOpts{
+		Name: "kemp_memory_amount_free",
+		Help: "The amount of memory free.",
+	})
+	percentMemFree = prometheus.NewGauge(prometheus.GaugeOpts{
+		Name: "kemp_percent_memory_free",
+		Help: "The percentage of free memory.",
+	})	
 
-	connsPerSec = prometheus.NewGauge(prometheus.GaugeOpts{
-		Name: "kemp_totals_connections_per_second",
-		Help: "The number of connections per second.",
-	})
-	bytesPerSec = prometheus.NewGauge(prometheus.GaugeOpts{
-		Name: "kemp_totals_bytes_per_second",
-		Help: "The number of bytes per second.",
-	})
-	packetsPerSec = prometheus.NewGauge(prometheus.GaugeOpts{
-		Name: "kemp_totals_packets_per_second",
-		Help: "The number of packets per second.",
-	})
+        connsPerSec = prometheus.NewGauge(prometheus.GaugeOpts{
+                Name: "kemp_totals_connections_per_second",
+                Help: "The number of connections per second.",
+        })
+        totalConns = prometheus.NewGauge(prometheus.GaugeOpts{
+                Name: "kemp_totals_connections",
+                Help: "The total number of connections made.",
+        })
+        bitsPerSec = prometheus.NewGauge(prometheus.GaugeOpts{
+                Name: "kemp_totals_bits_per_second",
+                Help: "The number of bits per second.",
+        })  
+        totalBits = prometheus.NewGauge(prometheus.GaugeOpts{
+                Name: "kemp_totals_bits",
+                Help: "The total number of bits.",
+        })  
+        bytesPerSec = prometheus.NewGauge(prometheus.GaugeOpts{
+                Name: "kemp_totals_bytes_per_second",
+                Help: "The number of bytes per second.",
+        })  
+        totalBytes = prometheus.NewGauge(prometheus.GaugeOpts{
+                Name: "kemp_totals_bytes",
+                Help: "The total number of bytes.",
+        })  
+        packetsPerSec = prometheus.NewGauge(prometheus.GaugeOpts{
+                Name: "kemp_totals_packets_per_second",
+                Help: "The number of packets per second.",
+        })  
+        totalPackets = prometheus.NewGauge(prometheus.GaugeOpts{
+                Name: "kemp_totals_packets",
+                Help: "The total number of packets.",
+        })
 
 	virtualServiceTotalConnections = prometheus.NewGaugeVec(prometheus.GaugeOpts{
 		Name: "kemp_virtual_service_total_connections",
@@ -113,9 +179,26 @@ func init() {
 
 	prometheus.MustRegister(kempUp)
 
-	prometheus.MustRegister(connsPerSec)
-	prometheus.MustRegister(bytesPerSec)
-	prometheus.MustRegister(packetsPerSec)
+	prometheus.MustRegister(tpsTotal)
+	prometheus.MustRegister(tpsTotalSSL)
+	prometheus.MustRegister(cpuUser)
+	prometheus.MustRegister(cpuSystem)
+	prometheus.MustRegister(cpuIdle)
+	prometheus.MustRegister(cpuIOWaiting)
+	prometheus.MustRegister(cpuUsage)
+	prometheus.MustRegister(memUsed)
+	prometheus.MustRegister(percentMemUsed)
+	prometheus.MustRegister(memFree)
+	prometheus.MustRegister(percentMemFree)	
+
+        prometheus.MustRegister(connsPerSec)
+        prometheus.MustRegister(totalConns)
+        prometheus.MustRegister(bitsPerSec)
+        prometheus.MustRegister(totalBits)
+        prometheus.MustRegister(bytesPerSec)
+        prometheus.MustRegister(totalBytes)
+        prometheus.MustRegister(packetsPerSec)
+        prometheus.MustRegister(totalPackets)
 
 	prometheus.MustRegister(virtualServiceTotalConnections)
 	prometheus.MustRegister(virtualServiceTotalPackets)
@@ -178,13 +261,30 @@ func serverRun(cmd *cobra.Command, args []string) {
 			}
 			kempUp.Set(1)
 
+			tpsTotal.Set(float64(statistics.TPS.Total))
+			tpsTotalSSL.Set(float64(statistics.TPS.SSL))
+			cpuUser.Set(float64(statistics.CPU.User))
+			cpuSystem.Set(float64(statistics.CPU.System))
+			cpuIdle.Set(float64(statistics.CPU.Idle))
+			cpuIOWaiting.Set(float64(statistics.CPU.IOWaiting))
+			cpuUsage.Set(float64(statistics.CPU.Used))
+			memUsed.Set(float64(statistics.Memory.MemUsed))
+			percentMemUsed.Set(float64(statistics.Memory.PercentMemUsed))
+			memFree.Set(float64(statistics.Memory.MemFree))
+			percentMemFree.Set(float64(statistics.Memory.PercentMemFree))
+			
 			for _, vs := range virtualServices {
 				addressNameLookup[vs.IPAddress] = vs.Name
 			}
 
-			connsPerSec.Set(float64(statistics.Totals.ConnectionsPerSec))
-			bytesPerSec.Set(float64(statistics.Totals.BytesPerSec))
-			packetsPerSec.Set(float64(statistics.Totals.PacketsPerSec))
+                        connsPerSec.Set(float64(statistics.Totals.ConnectionsPerSec))
+                        totalConns.Set(float64(statistics.Totals.TotalConnections))
+                        bitsPerSec.Set(float64(statistics.Totals.BitsPerSec))
+                        totalBits.Set(float64(statistics.Totals.TotalBits))
+                        bytesPerSec.Set(float64(statistics.Totals.BytesPerSec))
+                        totalBytes.Set(float64(statistics.Totals.TotalBytes))
+                        packetsPerSec.Set(float64(statistics.Totals.PacketsPerSec))
+                        totalPackets.Set(float64(statistics.Totals.TotalPackets))
 
 			for _, vs := range statistics.VirtualServices {
 				name, _ := addressNameLookup[vs.Address]
