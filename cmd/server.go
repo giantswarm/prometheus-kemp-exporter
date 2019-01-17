@@ -268,10 +268,10 @@ func serverRun(cmd *cobra.Command, args []string) {
 			cpuIdle.Set(float64(statistics.CPU.Idle))
 			cpuIOWaiting.Set(float64(statistics.CPU.IOWaiting))
 			cpuUsage.Set(float64(statistics.CPU.Used))
-			memUsed.Set(float64(statistics.Memory.Memused))
-			percentMemUsed.Set(float64(statistics.Memory.Percentmemused))
-			memFree.Set(float64(statistics.Memory.Memfree))
-			percentMemFree.Set(float64(statistics.Memory.Percentmemfree))
+			memUsed.Set(float64(statistics.Memory.MemUsed))
+			percentMemUsed.Set(float64(statistics.Memory.PercentMemUsed))
+			memFree.Set(float64(statistics.Memory.MemFree))
+			percentMemFree.Set(float64(statistics.Memory.PercentMemFree))
 			
 			for _, vs := range virtualServices {
 				addressNameLookup[vs.IPAddress] = vs.Name
