@@ -11,7 +11,7 @@ import (
 	"syscall"
 	"time"
 
-	kemp "github.com/giantswarm/kemp-client"
+	kemp "github.com/majandres/kemp-client"
 	"github.com/prometheus/client_golang/prometheus"
 	"github.com/spf13/cobra"
 )
